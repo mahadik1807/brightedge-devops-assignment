@@ -1,0 +1,55 @@
+---
+- name: Clone or update data-sync repository
+  ansible.builtin.git:
+    repo: "{{ data_sync_repo_url }}"
+    dest: "{{ data_sync_install_dir }}"
+    version: "{{ data_sync_repo_version }}"
+    update: true
+  notify: Restart data-sync
+
+- name: Install Python dependencies into virtualenv
+  ansible.builtin.pip:
+    requirements: "{{ data_sync_install_dir }}/{{ data_sync_requirements_file }}"
+    virtualenv: "{{ data_sync_venv_dir }}"
+    virtualenv_command: python3.9 -m venv
+  notify: Restart data-sync
+
+- name: Ensure config directory exists
+  ansible.builtin.file:
+    path: "{{ data_sync_config_dir }}"
+    state: directory
+    owner: root
+    group: "{{ data_sync_group }}"
+    mode: "0750"
+
+- name: Deploy secrets environment file
+  ansible.builtin.copy:
+    content: "REDIS_PASSWORD={{ data_sync_redis_password }}\n"
+    dest: "{{ data_sync_config_dir }}/secrets.env"
+    owner: root
+    group: "{{ data_sync_group }}"
+    mode: "0640"
+  when: data_sync_redis_password | length > 0
+  no_log: true
+  notify: Restart data-sync
+
+- name: Deploy data-sync systemd unit
+  ansible.builtin.template:
+    src: data-sync.service.j2
+    dest: "/etc/systemd/system/{{ data_sync_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart data-sync
+
+# Make sure a new/changed unit is loaded before we try to start it
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure data-sync is enabled and running
+  ansible.builtin.systemd:
+    name: "{{ data_sync_service_name }}"
+    enabled: true
+    state: started

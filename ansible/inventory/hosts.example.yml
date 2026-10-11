@@ -1,0 +1,7 @@
+---
+all:
+  children:
+    service:
+      hosts:
+        svc-vm-01.example.internal:
+        svc-vm-02.example.internal:

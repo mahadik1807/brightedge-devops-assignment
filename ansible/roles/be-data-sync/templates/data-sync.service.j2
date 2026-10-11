@@ -1,0 +1,28 @@
+# {{ ansible_managed }}
+[Unit]
+Description=data-sync FastAPI service ({{ data_sync_app_env }})
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ data_sync_user }}
+Group={{ data_sync_group }}
+WorkingDirectory={{ data_sync_install_dir }}
+Environment="APP_ENV={{ data_sync_app_env }}"
+Environment="REDIS_HOST={{ data_sync_redis_host }}"
+Environment="REDIS_PORT={{ data_sync_redis_port }}"
+Environment="LOG_LEVEL={{ data_sync_log_level }}"
+Environment="WORKERS={{ data_sync_workers }}"
+Environment="MAX_CONNECTIONS={{ data_sync_max_connections }}"
+# REDIS_PASSWORD lives in a root-owned 0640 file, not in the unit
+EnvironmentFile=-{{ data_sync_config_dir }}/secrets.env
+ExecStart={{ data_sync_venv_dir }}/bin/uvicorn {{ data_sync_app_module }} --host 0.0.0.0 --port {{ data_sync_port }} --workers {{ data_sync_workers }}
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

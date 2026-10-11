@@ -1,0 +1,9 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart data-sync
+  ansible.builtin.systemd:
+    name: "{{ data_sync_service_name }}"
+    state: restarted

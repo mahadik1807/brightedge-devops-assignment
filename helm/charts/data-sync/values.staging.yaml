@@ -1,0 +1,23 @@
+# Staging: 2 fixed replicas, INFO logs, staging redis.
+appEnv: staging
+logLevel: INFO
+replicaCount: 2
+
+redis:
+  host: redis-master.data-sync-staging.svc.cluster.local
+  password: ""        # inject at deploy time: --set redis.password=... or existingSecret
+
+autoscaling:
+  enabled: false
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 384Mi

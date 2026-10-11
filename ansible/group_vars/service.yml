@@ -1,0 +1,8 @@
+---
+# Gate used by roles to decide whether a host runs "service" workloads
+be_role: service
+
+data_sync_app_env: production
+data_sync_redis_host: redis-master.prod.example.internal
+data_sync_log_level: INFO
+# data_sync_redis_password: set in an ansible-vault encrypted file, never here

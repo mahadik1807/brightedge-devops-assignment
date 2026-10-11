@@ -1,0 +1,7 @@
+---
+# Team convention is be-{service} role names and data_sync_* variables
+# (required by the assignment). Both are intentional deviations from
+# ansible-lint's default naming rules.
+skip_list:
+  - role-name
+  - "var-naming[no-role-prefix]"

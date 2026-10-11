@@ -1,0 +1,108 @@
+# Safe defaults: small, debug logging, local redis. Override per environment
+# with values.staging.yaml / values.production.yaml.
+
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  # Placeholder image - replace with the real registry path
+  repository: ghcr.io/example/data-sync
+  tag: ""            # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+containerPort: 8080
+
+# --- Application config (rendered into the ConfigMap) ---
+appEnv: staging
+logLevel: DEBUG
+workers: 4
+maxConnections: 100
+
+redis:
+  host: redis-master.data-sync.svc.cluster.local
+  port: 6379
+  # Chart-managed Secret. Local-dev default ONLY; staging/production blank this
+  # so `helm` fails unless a password is injected (--set / CI secret).
+  password: "local-dev-only-change-me"
+  # Use a pre-existing Secret (External Secrets, Sealed Secrets...) instead.
+  # Must contain the key REDIS_PASSWORD. When set, the chart renders no Secret.
+  existingSecret: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  # Fast scale-up, slow scale-down (see DESIGN.md)
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+
+# Disabled by default: minAvailable=1 with 1 replica blocks node drains
+# on a local cluster. Enabled in staging/production.
+pdb:
+  enabled: false
+  minAvailable: 1
+
+probes:
+  startup:
+    failureThreshold: 30
+    periodSeconds: 2
+  liveness:
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+  readiness:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 2
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  path: /metrics
+  labels:
+    release: kube-prometheus-stack   # must match the Prometheus Operator selector
+
+podAnnotations: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,28 @@
+---
+- name: Install Python 3.9, pip and git
+  ansible.builtin.dnf:
+    name: "{{ data_sync_packages }}"
+    state: present
+
+- name: Create data-sync group
+  ansible.builtin.group:
+    name: "{{ data_sync_group }}"
+    system: true
+    state: present
+
+- name: Create data-sync user
+  ansible.builtin.user:
+    name: "{{ data_sync_user }}"
+    group: "{{ data_sync_group }}"
+    system: true
+    shell: /sbin/nologin
+    create_home: false
+    state: present
+
+- name: Ensure install directory exists
+  ansible.builtin.file:
+    path: "{{ data_sync_install_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

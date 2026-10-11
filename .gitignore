@@ -1,0 +1,3 @@
+standard/data-sync/production/rendered/
+*.retry
+.vault_pass

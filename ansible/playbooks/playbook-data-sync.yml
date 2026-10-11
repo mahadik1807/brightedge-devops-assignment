@@ -1,0 +1,10 @@
+---
+# Usage:
+#   ansible-playbook playbooks/playbook-data-sync.yml --tags install
+#   ansible-playbook playbooks/playbook-data-sync.yml --tags deploy
+# Tags (install / deploy) are set on the role's tasks.
+- name: Deploy data-sync to service hosts
+  hosts: service
+  become: true
+  roles:
+    - role: be-data-sync

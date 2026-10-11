@@ -1,0 +1,11 @@
+---
+# Only act on hosts whose be_role is 'service'.
+- name: Install data-sync prerequisites
+  ansible.builtin.import_tasks: install.yml
+  when: be_role | default('') == 'service'
+  tags: [install]
+
+- name: Deploy data-sync application and service
+  ansible.builtin.import_tasks: deploy.yml
+  when: be_role | default('') == 'service'
+  tags: [deploy]

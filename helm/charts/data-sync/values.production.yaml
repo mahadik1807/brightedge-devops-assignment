@@ -1,0 +1,33 @@
+# Production: HPA 3..20, strict resources (memory limit > request only slightly,
+# no unbounded usage), production redis.
+appEnv: production
+logLevel: INFO
+
+image:
+  pullPolicy: IfNotPresent
+
+redis:
+  host: redis-master.data-sync.svc.cluster.local
+  password: ""        # inject via CI secret or use redis.existingSecret
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 60   # lower target = headroom for bursts
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 640Mi
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
